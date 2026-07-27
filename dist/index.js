@@ -70207,7 +70207,7 @@ var require_int$2 = /* @__PURE__ */ __commonJSMin(((exports, module) => {
 					if (ch !== "0" && ch !== "1") return false;
 					hasDigits = true;
 				}
-				return hasDigits && Number.isFinite(parseYamlInteger(data));
+				return hasDigits && isFinite(parseYamlInteger(data));
 			}
 			if (ch === "x") {
 				index++;
@@ -70215,7 +70215,7 @@ var require_int$2 = /* @__PURE__ */ __commonJSMin(((exports, module) => {
 					if (!isHexCode(data.charCodeAt(index))) return false;
 					hasDigits = true;
 				}
-				return hasDigits && Number.isFinite(parseYamlInteger(data));
+				return hasDigits && isFinite(parseYamlInteger(data));
 			}
 			if (ch === "o") {
 				index++;
@@ -70223,7 +70223,7 @@ var require_int$2 = /* @__PURE__ */ __commonJSMin(((exports, module) => {
 					if (!isOctCode(data.charCodeAt(index))) return false;
 					hasDigits = true;
 				}
-				return hasDigits && Number.isFinite(parseYamlInteger(data));
+				return hasDigits && isFinite(parseYamlInteger(data));
 			}
 		}
 		for (; index < max; index++) {
@@ -70231,7 +70231,7 @@ var require_int$2 = /* @__PURE__ */ __commonJSMin(((exports, module) => {
 			hasDigits = true;
 		}
 		if (!hasDigits) return false;
-		return Number.isFinite(parseYamlInteger(data));
+		return isFinite(parseYamlInteger(data));
 	}
 	function parseYamlInteger(data) {
 		let value = data;
@@ -70294,7 +70294,7 @@ var require_float$2 = /* @__PURE__ */ __commonJSMin(((exports, module) => {
 	function resolveYamlFloat(data) {
 		if (data === null) return false;
 		if (!YAML_FLOAT_PATTERN.test(data)) return false;
-		if (Number.isFinite(parseFloat(data, 10))) return true;
+		if (isFinite(parseFloat(data, 10))) return true;
 		return YAML_FLOAT_SPECIAL_PATTERN.test(data);
 	}
 	function constructYamlFloat(data) {
@@ -70707,7 +70707,7 @@ var require_loader = /* @__PURE__ */ __commonJSMin(((exports, module) => {
 		this.json = options["json"] || false;
 		this.listener = options["listener"] || null;
 		this.maxDepth = typeof options["maxDepth"] === "number" ? options["maxDepth"] : 100;
-		this.maxMergeSeqLength = typeof options["maxMergeSeqLength"] === "number" ? options["maxMergeSeqLength"] : 20;
+		this.maxTotalMergeKeys = typeof options["maxTotalMergeKeys"] === "number" ? options["maxTotalMergeKeys"] : 1e4;
 		this.implicitTypes = this.schema.compiledImplicit;
 		this.typeMap = this.schema.compiledTypeMap;
 		this.length = input.length;
@@ -70716,6 +70716,7 @@ var require_loader = /* @__PURE__ */ __commonJSMin(((exports, module) => {
 		this.lineStart = 0;
 		this.lineIndent = 0;
 		this.depth = 0;
+		this.totalMergeKeys = 0;
 		this.firstTabInLine = -1;
 		this.documents = [];
 		this.anchorMapTransactions = [];
@@ -70840,6 +70841,7 @@ var require_loader = /* @__PURE__ */ __commonJSMin(((exports, module) => {
 		const sourceKeys = Object.keys(source);
 		for (let index = 0, quantity = sourceKeys.length; index < quantity; index += 1) {
 			const key = sourceKeys[index];
+			if (state.maxTotalMergeKeys !== -1 && ++state.totalMergeKeys > state.maxTotalMergeKeys) throwError(state, "merge keys exceeded maxTotalMergeKeys (" + state.maxTotalMergeKeys + ")");
 			if (!_hasOwnProperty.call(destination, key)) {
 				setProperty(destination, key, source[key]);
 				overridableKeys[key] = true;
@@ -70857,16 +70859,8 @@ var require_loader = /* @__PURE__ */ __commonJSMin(((exports, module) => {
 		if (typeof keyNode === "object" && _class(keyNode) === "[object Object]") keyNode = "[object Object]";
 		keyNode = String(keyNode);
 		if (_result === null) _result = {};
-		if (keyTag === "tag:yaml.org,2002:merge") if (Array.isArray(valueNode)) {
-			if (valueNode.length > state.maxMergeSeqLength) throwError(state, "merge sequence length exceeded maxMergeSeqLength (" + state.maxMergeSeqLength + ")");
-			const seen = /* @__PURE__ */ new Set();
-			for (let index = 0, quantity = valueNode.length; index < quantity; index += 1) {
-				const src = valueNode[index];
-				if (seen.has(src)) continue;
-				seen.add(src);
-				mergeMappings(state, _result, src, overridableKeys);
-			}
-		} else mergeMappings(state, _result, valueNode, overridableKeys);
+		if (keyTag === "tag:yaml.org,2002:merge") if (Array.isArray(valueNode)) for (let index = 0, quantity = valueNode.length; index < quantity; index += 1) mergeMappings(state, _result, valueNode[index], overridableKeys);
+		else mergeMappings(state, _result, valueNode, overridableKeys);
 		else {
 			if (!state.json && !_hasOwnProperty.call(overridableKeys, keyNode) && _hasOwnProperty.call(_result, keyNode)) {
 				state.line = startLine || state.line;
@@ -92785,7 +92779,7 @@ var require_commonjs$2 = /* @__PURE__ */ __commonJSMin(((exports) => {
 //#region node_modules/brace-expansion/dist/commonjs/index.js
 var require_commonjs$1 = /* @__PURE__ */ __commonJSMin(((exports) => {
 	Object.defineProperty(exports, "__esModule", { value: true });
-	exports.EXPANSION_MAX = void 0;
+	exports.EXPANSION_MAX_LENGTH = exports.EXPANSION_MAX = void 0;
 	exports.expand = expand;
 	const balanced_match_1 = require_commonjs$2();
 	const escSlash = "\0SLASH" + Math.random() + "\0";
@@ -92804,6 +92798,7 @@ var require_commonjs$1 = /* @__PURE__ */ __commonJSMin(((exports) => {
 	const commaPattern = /\\,/g;
 	const periodPattern = /\\\./g;
 	exports.EXPANSION_MAX = 1e5;
+	exports.EXPANSION_MAX_LENGTH = 4e6;
 	function numeric(str) {
 		return !isNaN(str) ? parseInt(str, 10) : str.charCodeAt(0);
 	}
@@ -92836,9 +92831,9 @@ var require_commonjs$1 = /* @__PURE__ */ __commonJSMin(((exports) => {
 	}
 	function expand(str, options = {}) {
 		if (!str) return [];
-		const { max = exports.EXPANSION_MAX } = options;
+		const { max = exports.EXPANSION_MAX, maxLength = exports.EXPANSION_MAX_LENGTH } = options;
 		if (str.slice(0, 2) === "{}") str = "\\{\\}" + str.slice(2);
-		return expand_(escapeBraces(str), max, true).map(unescapeBraces);
+		return expand_(escapeBraces(str), max, maxLength, true).map(unescapeBraces);
 	}
 	function embrace(str) {
 		return "{" + str + "}";
@@ -92852,18 +92847,70 @@ var require_commonjs$1 = /* @__PURE__ */ __commonJSMin(((exports) => {
 	function gte(i, y) {
 		return i >= y;
 	}
-	function expand_(str, max, isTop) {
-		/** @type {string[]} */
-		const expansions = [];
-		const m = (0, balanced_match_1.balanced)("{", "}", str);
-		if (!m) return [str];
-		const pre = m.pre;
-		const post = m.post.length ? expand_(m.post, max, false) : [""];
-		if (/\$$/.test(m.pre)) for (let k = 0; k < post.length && k < max; k++) {
-			const expansion = pre + "{" + m.body + "}" + post[k];
-			expansions.push(expansion);
+	function combine(acc, pre, values, max, maxLength, dropEmpties) {
+		const out = [];
+		let length = 0;
+		for (let a = 0; a < acc.length; a++) for (let v = 0; v < values.length; v++) {
+			if (out.length >= max) return out;
+			const expansion = acc[a] + pre + values[v];
+			if (dropEmpties && !expansion) continue;
+			if (length + expansion.length > maxLength) return out;
+			out.push(expansion);
+			length += expansion.length;
 		}
-		else {
+		return out;
+	}
+	function expandSequence(body, isAlphaSequence, max) {
+		const n = body.split(/\.\./);
+		const N = [];
+		/* c8 ignore start */
+		if (n[0] === void 0 || n[1] === void 0) return N;
+		/* c8 ignore stop */
+		const x = numeric(n[0]);
+		const y = numeric(n[1]);
+		const width = Math.max(n[0].length, n[1].length);
+		let incr = n.length === 3 && n[2] !== void 0 ? Math.max(Math.abs(numeric(n[2])), 1) : 1;
+		let test = lte;
+		if (y < x) {
+			incr *= -1;
+			test = gte;
+		}
+		const pad = n.some(isPadded);
+		for (let i = x; test(i, y) && N.length < max; i += incr) {
+			let c;
+			if (isAlphaSequence) {
+				c = String.fromCharCode(i);
+				if (c === "\\") c = "";
+			} else {
+				c = String(i);
+				if (pad) {
+					const need = width - c.length;
+					if (need > 0) {
+						const z = new Array(need + 1).join("0");
+						if (i < 0) c = "-" + z + c.slice(1);
+						else c = z + c;
+					}
+				}
+			}
+			N.push(c);
+		}
+		return N;
+	}
+	function expand_(str, max, maxLength, isTop) {
+		let acc = [""];
+		let dropEmpties = false;
+		let firstGroup = true;
+		for (;;) {
+			const m = (0, balanced_match_1.balanced)("{", "}", str);
+			if (!m) return combine(acc, str, [""], max, maxLength, dropEmpties);
+			const pre = m.pre;
+			if (/\$$/.test(pre)) {
+				acc = combine(acc, pre + "{" + m.body + "}", [""], max, maxLength, dropEmpties && !m.post.length);
+				firstGroup = false;
+				if (!m.post.length) break;
+				str = m.post;
+				continue;
+			}
 			const isNumericSequence = /^-?\d+\.\.-?\d+(?:\.\.-?\d+)?$/.test(m.body);
 			const isAlphaSequence = /^[a-zA-Z]\.\.[a-zA-Z](?:\.\.-?\d+)?$/.test(m.body);
 			const isSequence = isNumericSequence || isAlphaSequence;
@@ -92871,61 +92918,37 @@ var require_commonjs$1 = /* @__PURE__ */ __commonJSMin(((exports) => {
 			if (!isSequence && !isOptions) {
 				if (m.post.match(/,(?!,).*\}/)) {
 					str = m.pre + "{" + m.body + escClose + m.post;
-					return expand_(str, max, true);
+					isTop = true;
+					continue;
 				}
-				return [str];
+				return combine(acc, pre + "{" + m.body + "}" + m.post, [""], max, maxLength, dropEmpties);
 			}
-			let n;
-			if (isSequence) n = m.body.split(/\.\./);
+			if (firstGroup) {
+				dropEmpties = isTop && !isSequence;
+				firstGroup = false;
+			}
+			let values;
+			if (isSequence) values = expandSequence(m.body, isAlphaSequence, max);
 			else {
-				n = parseCommaParts(m.body);
+				let n = parseCommaParts(m.body);
 				if (n.length === 1 && n[0] !== void 0) {
-					n = expand_(n[0], max, false).map(embrace);
+					n = expand_(n[0], max, maxLength, false).map(embrace);
 					/* c8 ignore start */
-					if (n.length === 1) return post.map((p) => m.pre + n[0] + p);
-				}
-			}
-			let N;
-			if (isSequence && n[0] !== void 0 && n[1] !== void 0) {
-				const x = numeric(n[0]);
-				const y = numeric(n[1]);
-				const width = Math.max(n[0].length, n[1].length);
-				let incr = n.length === 3 && n[2] !== void 0 ? Math.max(Math.abs(numeric(n[2])), 1) : 1;
-				let test = lte;
-				if (y < x) {
-					incr *= -1;
-					test = gte;
-				}
-				const pad = n.some(isPadded);
-				N = [];
-				for (let i = x; test(i, y) && N.length < max; i += incr) {
-					let c;
-					if (isAlphaSequence) {
-						c = String.fromCharCode(i);
-						if (c === "\\") c = "";
-					} else {
-						c = String(i);
-						if (pad) {
-							const need = width - c.length;
-							if (need > 0) {
-								const z = new Array(need + 1).join("0");
-								if (i < 0) c = "-" + z + c.slice(1);
-								else c = z + c;
-							}
-						}
+					if (n.length === 1) {
+						acc = combine(acc, pre + n[0], [""], max, maxLength, dropEmpties && !m.post.length);
+						if (!m.post.length) break;
+						str = m.post;
+						continue;
 					}
-					N.push(c);
 				}
-			} else {
-				N = [];
-				for (let j = 0; j < n.length; j++) N.push.apply(N, expand_(n[j], max, false));
+				values = [];
+				for (let j = 0; j < n.length; j++) values.push.apply(values, expand_(n[j], max, maxLength, false));
 			}
-			for (let j = 0; j < N.length; j++) for (let k = 0; k < post.length && expansions.length < max; k++) {
-				const expansion = pre + N[j] + post[k];
-				if (!isTop || isSequence || expansion) expansions.push(expansion);
-			}
+			acc = combine(acc, pre, values, max, maxLength, dropEmpties && !m.post.length);
+			if (!m.post.length) break;
+			str = m.post;
 		}
-		return expansions;
+		return acc;
 	}
 }));
 //#endregion
