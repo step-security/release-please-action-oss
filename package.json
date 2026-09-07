@@ -29,7 +29,7 @@
   },
   "dependencies": {
     "@actions/core": "^3.0.1",
-    "axios": "^1.18.0",
+    "axios": "^1.18.1",
     "release-please": "^17.7.0",
     "source-map-support": "^0.5.21"
   },
