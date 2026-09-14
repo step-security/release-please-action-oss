@@ -71001,12 +71001,17 @@ var require_loader = /* @__PURE__ */ __commonJSMin(((exports, module) => {
 			state.result += _result;
 		}
 	}
+	function chargeMergeWork(state) {
+		state.totalMergeKeys++;
+		if (state.maxTotalMergeKeys !== -1 && state.totalMergeKeys > state.maxTotalMergeKeys) throwError(state, "merge keys exceeded maxTotalMergeKeys (" + state.maxTotalMergeKeys + ")");
+	}
 	function mergeMappings(state, destination, source, overridableKeys) {
 		if (!common.isObject(source)) throwError(state, "cannot merge mappings; the provided source object is unacceptable");
+		chargeMergeWork(state);
 		const sourceKeys = Object.keys(source);
 		for (let index = 0, quantity = sourceKeys.length; index < quantity; index += 1) {
 			const key = sourceKeys[index];
-			if (state.maxTotalMergeKeys !== -1 && ++state.totalMergeKeys > state.maxTotalMergeKeys) throwError(state, "merge keys exceeded maxTotalMergeKeys (" + state.maxTotalMergeKeys + ")");
+			chargeMergeWork(state);
 			if (!_hasOwnProperty.call(destination, key)) {
 				setProperty(destination, key, source[key]);
 				overridableKeys[key] = true;
@@ -71024,8 +71029,10 @@ var require_loader = /* @__PURE__ */ __commonJSMin(((exports, module) => {
 		if (typeof keyNode === "object" && _class(keyNode) === "[object Object]") keyNode = "[object Object]";
 		keyNode = String(keyNode);
 		if (_result === null) _result = {};
-		if (keyTag === "tag:yaml.org,2002:merge") if (Array.isArray(valueNode)) for (let index = 0, quantity = valueNode.length; index < quantity; index += 1) mergeMappings(state, _result, valueNode[index], overridableKeys);
-		else mergeMappings(state, _result, valueNode, overridableKeys);
+		if (keyTag === "tag:yaml.org,2002:merge") if (Array.isArray(valueNode)) {
+			if (valueNode.length > 100) throwError(state, "abnormal merge sequence size");
+			for (let index = 0, quantity = valueNode.length; index < quantity; index += 1) mergeMappings(state, _result, valueNode[index], overridableKeys);
+		} else mergeMappings(state, _result, valueNode, overridableKeys);
 		else {
 			if (!state.json && !_hasOwnProperty.call(overridableKeys, keyNode) && _hasOwnProperty.call(_result, keyNode)) {
 				state.line = startLine || state.line;
