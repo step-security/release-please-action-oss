@@ -1,6 +1,6 @@
 {
-  "name": "release-please-action",
-  "version": "6.0.3",
+  "name": "@step-security/release-please-action",
+  "version": "6.0.4",
   "private": true,
   "description": "automated releases based on conventional commits",
   "keywords": [
@@ -13,6 +13,7 @@
   },
   "license": "Apache-2.0",
   "author": "step-security",
+  "publisher": "step-security",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/step-security/release-please-action-oss.git"
@@ -29,22 +30,23 @@
   },
   "dependencies": {
     "@actions/core": "^3.0.1",
-    "axios": "^1.18.0",
+    "axios": "^1.21.1",
     "release-please": "^17.7.0",
     "source-map-support": "^0.5.21"
   },
   "devDependencies": {
     "@types/node": "^24.12.4",
-    "@vitest/coverage-v8": "^4.1.7",
-    "nock": "^14.0.15",
-    "oxfmt": "^0.56.0",
+    "@vitest/coverage-v8": "^5.0.0",
+    "nock": "^15.0.0",
+    "oxfmt": "^0.73.0",
     "oxlint": "^1.67.0",
     "rolldown": "^1.0.3",
-    "typescript": "^6.0.0",
-    "vitest": "^4.1.7"
+    "typescript": "^7.0.0",
+    "vitest": "^5.0.0"
   },
+  "packageManager": "npm@11.11.0",
   "engines": {
-    "node": ">=24.0.0"
-  },
-  "packageManager": "npm@11.11.0"
+    "node": ">=24",
+    "npm": ">=11"
+  }
 }
