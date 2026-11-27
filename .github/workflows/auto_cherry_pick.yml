@@ -34,6 +34,7 @@ jobs:
   cherry-pick:
     if: (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success') || github.event_name == 'workflow_dispatch' || contains(fromJson(toJson(github.event.pull_request.labels)).*.name, 'review-required')
     uses: step-security/reusable-workflows/.github/workflows/auto_cherry_pick.yaml@v1
+    cache-mode: read
     with:
       original-owner: "release-please-oss"
       repo-name: "release-please-action"
