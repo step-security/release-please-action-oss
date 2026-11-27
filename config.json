@@ -1,0 +1,17 @@
+{
+  "$comment": "Managed automatically when syncing with upstream. Do not edit by hand.",
+  "schema_version": 1,
+  "onboarding_type": "copied",
+  "action_type": "node",
+  "upstream": {
+    "repository": "release-please-oss/release-please-action",
+    "synced_tag": "v6.0.4",
+    "synced_commit": "599c30aae1e6568bb6a4303384e77b8c4f4d7376",
+    "archived": false
+  },
+  "build": {
+    "package_manager": "npm@11.11.0",
+    "node_version": "24",
+    "script": "build"
+  }
+}
